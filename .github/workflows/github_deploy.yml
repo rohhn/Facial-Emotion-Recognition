@@ -1,0 +1,42 @@
+name: FER App Deploy
+
+on:
+    push:
+        branches:
+        - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check Front-end repo
+      uses: actions-setup-node@v2
+      with:
+        - node-version: 21.x
+      run:
+            cd svelte_client
+            npm install
+            npm run build
+
+    - name: Deploy using SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        PORT: ${{ secrets.PORT }}
+        key: ${{ secrets.SSHKEY }}
+        script: |
+          cd Facial-Emotion-Recognition
+          git pull origin main
+          
+          # Build front-end
+          cd svelte_client
+          npm install
+          npm run build
+          
+          # restart web server
+          sudo /bin/systemctl restart fer_app.service fer_app.socket nginx
