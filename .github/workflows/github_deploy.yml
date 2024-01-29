@@ -11,16 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-    - name: Check Front-end repo
-      uses: actions-setup-node@v2
+    - name: Configure NodeJS
+      uses: actions/setup-node@v3
       with:
-        - node-version: 21.x
-      run:
-            cd svelte_client
-            npm install
-            npm run build
+        - node-version: '21.x'
+
+    - name: Check Front-end build
+    - run: |
+        cd svelte_client
+        npm install
+        npm run build
 
     - name: Deploy using SSH
       uses: appleboy/ssh-action@master
