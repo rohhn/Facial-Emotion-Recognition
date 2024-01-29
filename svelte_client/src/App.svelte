@@ -20,6 +20,9 @@
   let canvas = null;
   let emotion = "";
 
+  let height = 0;
+  let width = 0;
+
   async function getEmotion(data) {
 
     fetch('./api/predict', {

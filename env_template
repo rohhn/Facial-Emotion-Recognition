@@ -1,2 +1,2 @@
 ENVIRONMENT="dev | prod"
-FLASK_SECRET = ""
+SECRET_KEY=""
