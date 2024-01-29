@@ -1,5 +1,7 @@
 import json
+import os
 import re
+from dotenv import load_dotenv
 from base64 import b64decode
 from io import BytesIO
 
@@ -8,7 +10,10 @@ from flask import request, make_response
 
 from predict import make_prediction
 
+load_dotenv()
+
 app = Flask(__name__)
+app.secret_key = os.environ['SECRET_KEY']
 
 MODEL_PATH = 'model/SimpleCNNModel'
 
@@ -39,4 +44,7 @@ def get_emotion_prediction():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    if os.environ['ENVIRONMENT'] == 'dev':
+        app.run(debug=True)
+    else:
+        app.run(host='0.0.0.0', debug=False)

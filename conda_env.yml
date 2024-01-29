@@ -1,0 +1,3 @@
+name: fer_env
+dependencies:
+  - python=3.10.13

@@ -3,6 +3,14 @@
     display: none;
   }
 
+  #video {
+      transform: rotateY(180deg);
+      -ms-transform:rotateY(180deg); /* IE 9 */
+      -webkit-transform:rotateY(180deg); /* Safari and Chrome */
+      -moz-transform:rotateY(180deg); /* Firefox */
+      -o-transform:rotateY(180deg); /* Opera */
+  }
+
 </style>
 
 <script>
@@ -11,9 +19,6 @@
   let video = null;
   let canvas = null;
   let emotion = "";
-
-  let width = 0;
-  let height = 0;
 
   async function getEmotion(data) {
 
@@ -65,7 +70,6 @@
   const enableVideoCamera = async () => {
     try {
       video = document.getElementById("video");
-      canvas = document.getElementById("img_canvas");
 
       any_btn_clicked = true;
 
@@ -96,10 +100,14 @@
     let cam_d = document.getElementById("camera_d");
     cam_d.style.display = "none";
 
+    canvas = document.getElementById("img_canvas");
     canvas.setAttribute('height', height);
     canvas.setAttribute('width', width);
 
     const context = canvas.getContext("2d");
+
+    context.translate(canvas.width, 0);
+    context.scale(-1,1);
 
     context.drawImage(video, 0, 0, width, height);
 
@@ -147,18 +155,21 @@
             </ul>
         </div>
 
-        <div class="col col-sm-12 col-md-8 p-2 my-4">
-            <div class="row text-center align-items-start pt-2">
-              <button id="img_capt_b" on:click={enableVideoCamera} disabled={any_btn_clicked} class="col btn btn-sm btn-primary mx-3">Capture Image</button>
-              <button id="img_upl_b" on:click={enableFileUpload} disabled={any_btn_clicked} class="col btn btn-sm btn-primary mx-3">Upload Image</button>
-              <button id="cancel_b" on:click={resetState} disabled={!any_btn_clicked} class="col btn btn-sm btn-danger mx-3">Reset</button>
+        <div class="col-md-12 col-lg-8 p-2 my-4">
+
+            <div class="row text-center pt-2">
+                <div class="btn-group" role="group">
+                    <button id="img_capt_b" on:click={enableVideoCamera} disabled={any_btn_clicked} class="btn btn-sm btn-primary m-1">Capture Image</button>
+                    <button id="img_upl_b" on:click={enableFileUpload} disabled={any_btn_clicked} class="btn btn-sm btn-primary m-1">Upload Image</button>
+                    <button id="cancel_b" on:click={resetState} disabled={!any_btn_clicked} class="btn btn-sm btn-danger m-1">Reset</button>
+                </div>
             </div>
 
             <div id="inp_d" class="row">
                 <div id="img_capt_d" class="container-fluid">
                     <div id="camera_d" class="m-5 align-items-center text-center">
                       <!-- svelte-ignore a11y-media-has-caption -->
-                      <video id="video" class="object-fit-contain" bind:this={videoSource} />
+                      <video id="video" class="" bind:this={videoSource} />
                       <button id="img_snap_b" on:click={takeSnapshot} class="btn btn-sm btn-secondary">Take Photo</button>
                     </div>
 
@@ -174,7 +185,7 @@
             </div>
         </div>
 
-        <div class="col col-sm-12 col-md-4 p-2">
+        <div class="col-md-12 col-lg-4 p-2">
             <div id="result_d" class="align-items-center text-center">
                 <h2 class="fs-4 text">Emotion Detected</h2>
                 <p id="result_t" class="fs-5 text">{emotion}</p>
