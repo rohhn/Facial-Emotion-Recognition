@@ -116,6 +116,13 @@
 
     const data = canvas.toDataURL("image/png");
 
+    // Stop video after image capture
+    if (video) {
+      const tracks = video.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      video.pause();
+    }
+
     getEmotion(data);
 
   }
