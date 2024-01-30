@@ -37,6 +37,8 @@ jobs:
           git pull origin main
           
           # Build front-end
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
           cd svelte_client
           npm install
           npm run build
