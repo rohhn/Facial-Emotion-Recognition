@@ -36,7 +36,6 @@ def get_emotion_prediction():
     img = re.sub('^data:image/.+;base64,', '', data)
     img = BytesIO(b64decode(img))
     emotion = make_prediction(MODEL_PATH, img)
-    # print(f"emotion: {emotion}")
 
     response = make_response(emotion, 200)
     response.mimetype = "text/plain"
