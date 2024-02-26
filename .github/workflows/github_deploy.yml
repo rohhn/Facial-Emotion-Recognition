@@ -39,6 +39,10 @@ jobs:
           cd Facial-Emotion-Recognition
           git pull origin main
           
+          # Install Python dependencies
+          conda activate fer_env
+          python -m pip install -r requirements.txt
+          
           # Build front-end
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
@@ -47,4 +51,4 @@ jobs:
           npm run build
           
           # restart web server
-          sudo /bin/systemctl restart fer_app.service fer_app.socket nginx
+          sudo /bin/systemctl restart fer_app.socket nginx
