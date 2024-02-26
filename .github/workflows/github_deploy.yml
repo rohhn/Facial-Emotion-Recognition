@@ -7,6 +7,9 @@ on:
         paths:
           - svelte_client/**
           - server.py
+          - requirements.txt
+          - predict.py
+          - .github/**
 
 jobs:
   build:
