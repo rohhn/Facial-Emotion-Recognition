@@ -105,6 +105,14 @@ class FERDataset(Dataset):
 
 
 def cv2_face_segmentation(img, padding=25, convert_grayscale=False):
+    """
+    Detect and crop image to only include face.
+
+    :param img:
+    :param padding:
+    :param convert_grayscale:
+    :return: Returns face segmented image along with bounding if found.
+    """
 
     face_clf = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
@@ -116,9 +124,13 @@ def cv2_face_segmentation(img, padding=25, convert_grayscale=False):
     if len(face_op) > 0:  # face detected
         x, y, w, h = face_op[0]
 
-        face = img[y - padding: y + h + padding, x - padding: x + w + padding]
+        # check max(0, y-padding) to avoid negative indexes
+        face = img[max(0, y - padding): y + h + padding, max(0, x - padding): x + w + padding]
         # face = cv2.resize(face, (48, 48))
+
+        face_bounding = (x, y, w, h)
     else:
         face = img
+        face_bounding = None
 
-    return face
+    return face, face_bounding

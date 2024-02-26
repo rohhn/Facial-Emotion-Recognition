@@ -29,14 +29,15 @@ def make_prediction(model_name, img):
 
     img_tensor = Image.open(img).convert('L')  # read image
 
-    img_tensor = cv2_face_segmentation(np.array(img_tensor, dtype='uint8'))  # segment face if found
+    # segment face if found
+    segmented_face, segmented_bounds = cv2_face_segmentation(np.array(img_tensor, dtype='uint8'))
 
-    img_tensor = IMAGE_TRANSFORMER_TORCH(img_tensor)
+    img_tensor = IMAGE_TRANSFORMER_TORCH(segmented_face)
 
     y_pred = model(**{"x": img_tensor.unsqueeze(0)})
     y_pred = target_encoder.inverse_transform(F.softmax(y_pred, dim=1).argmax(-1).cpu().numpy())[0]
 
-    return y_pred
+    return y_pred, segmented_bounds
 
 
 if __name__ == "__main__":

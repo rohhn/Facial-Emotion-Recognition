@@ -14,16 +14,17 @@
 </style>
 
 <script>
+
   let videoSource = null;
   let any_btn_clicked = false;
   let video = null;
-  let canvas = null;
+  // let img_inp_canvas = document.getElementById("img_inp_canvas");
   let emotion = "";
 
-  let height = 0;
-  let width = 0;
+  // let height = 0;
+  // let width = 0;
 
-  async function getEmotion(data) {
+  async function getEmotion(data, mirrored=false) {
 
     fetch('./api/predict', {
         method: 'POST',
@@ -31,8 +32,30 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({data})
-      }).then(response => response.text()).then(data => {
-        emotion = data;
+      }).then(response => response.json()).then(data => {
+
+        console.log(data);
+
+        if (data.segmentation_bounds) {
+
+            let bounds = data.segmentation_bounds;
+
+            let img_inp_canvas = document.getElementById("img_inp_canvas");
+            const context = img_inp_canvas.getContext("2d");
+
+            if (mirrored) {
+                context.translate(img_inp_canvas.width, 0);
+                context.scale(-1,1);
+            }
+
+            context.beginPath();
+            context.rect(bounds.x, bounds.y, bounds.w, bounds.h);
+            context.lineWidth = 4;
+            context.strokeStyle = 'red';
+            context.stroke();
+        }
+
+        emotion = data.emotion;
 
       }).catch((error) => {
         console.error('Error:', error);
@@ -57,9 +80,10 @@
     let cam_d = document.getElementById("camera_d");
     cam_d.style.display = "block";
 
-    if (canvas) {
-      canvas.setAttribute('height', 0);
-      canvas.setAttribute('width', 0);
+    let img_inp_canvas = document.getElementById("img_inp_canvas");
+    if (img_inp_canvas) {
+      img_inp_canvas.setAttribute('height', 0);
+      img_inp_canvas.setAttribute('width', 0);
     }
 
     // File Upload reset
@@ -97,24 +121,27 @@
   function takeSnapshot() {
 
     video = document.getElementById("video");
-    height = video.videoHeight;
-    width = video.videoWidth;
+    // height = video.videoHeight;
+    // width = video.videoWidth;
 
     let cam_d = document.getElementById("camera_d");
     cam_d.style.display = "none";
 
-    canvas = document.getElementById("img_canvas");
-    canvas.setAttribute('height', height);
-    canvas.setAttribute('width', width);
+    // img_inp_canvas = document.getElementById("img_inp_canvas");
+    // img_inp_canvas.setAttribute('height', height);
+    // img_inp_canvas.setAttribute('width', width);
+    //
+    // const context = img_inp_canvas.getContext("2d");
+    //
+    // context.translate(img_inp_canvas.width, 0);
+    // context.scale(-1,1);
+    //
+    // context.drawImage(video, 0, 0, width, height);
 
-    const context = canvas.getContext("2d");
+    const data = displayImage(video.videoHeight, video.videoWidth, video, true);
 
-    context.translate(canvas.width, 0);
-    context.scale(-1,1);
-
-    context.drawImage(video, 0, 0, width, height);
-
-    const data = canvas.toDataURL("image/png");
+    // let img_inp_canvas = document.getElementById("img_inp_canvas");
+    // const data = img_inp_canvas.toDataURL("image/png");
 
     // Stop video after image capture
     if (video) {
@@ -123,7 +150,7 @@
       video.pause();
     }
 
-    getEmotion(data);
+    getEmotion(data, true);
 
   }
 
@@ -141,14 +168,46 @@
 
   const uploadFile =(e) => {
 
-    let img = e.target.files[0];
+    let img_file = e.target.files[0];
 
     let reader = new FileReader();
-    reader.readAsDataURL(img);
+    reader.readAsDataURL(img_file);
 
-    reader.onload = e => {
-         getEmotion(e.target.result);
+    reader.onloadend = e => {
+        let image = new Image();
+        image.src = e.target.result;
+
+        console.log("Image height: " + image.height);
+        console.log("Image width: " + image.width);
+
+        image.onload = ev => {
+            const data = displayImage(image.height, image.width, image);
+            getEmotion(data);
+        }
+
     };
+  }
+
+  function displayImage(height, width, data, mirror=false) {
+
+      let img_inp_canvas = document.getElementById("img_inp_canvas");
+
+      console.log("displayImage height: " + height);
+      console.log("displayImage width: " + width);
+
+      img_inp_canvas.setAttribute('height', height);
+      img_inp_canvas.setAttribute('width', width);
+
+      const context = img_inp_canvas.getContext("2d");
+
+      if (mirror) {
+          context.translate(img_inp_canvas.width, 0);
+          context.scale(-1,1);
+      }
+
+      context.drawImage(data, 0, 0, width, height);
+
+      return img_inp_canvas.toDataURL("image/png");
   }
 
 </script>
@@ -183,16 +242,20 @@
                       <button id="img_snap_b" on:click={takeSnapshot} class="btn btn-sm btn-secondary">Take Photo</button>
                     </div>
 
-                    <div id="photo_d" class="m-5 align-items-center text-center">
-                        <!--  This is where the image will be displayed after capture-->
-                        <canvas id="img_canvas"></canvas>
-                    </div>
+<!--                    <div id="photo_d" class="m-5 align-items-center text-center">-->
+<!--                        &lt;!&ndash;  This is where the image will be displayed after capture&ndash;&gt;-->
+<!--                        <canvas id="img_inp_canvas"></canvas>-->
+<!--                    </div>-->
                 </div>
 
                 <div id="img_upl_d" class="container-fluid align-items-center text-center">
                     <input id="upl_img" type="file" accept="image/*" on:change={(e)=>uploadFile(e)} class="form-control my-3 bg-dark text-light"/>
                 </div>
+
+                <canvas id="img_inp_canvas"></canvas>
+
             </div>
+
         </div>
 
         <div class="col-md-12 col-lg-4 p-2">

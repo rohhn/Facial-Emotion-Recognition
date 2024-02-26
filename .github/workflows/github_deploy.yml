@@ -39,11 +39,13 @@ jobs:
         PORT: ${{ secrets.PORT }}
         key: ${{ secrets.SSHKEY }}
         script: |
+          
+          # Update the repository with latest code
           cd Facial-Emotion-Recognition
           git pull origin main
           
           # Install Python dependencies
-          /home/deploy/miniconda3/envs/fer_env/bin/python -m pip install -r requirements.txt
+          $HOME/miniconda3/envs/fer_env/bin/python -m pip install -r requirements.txt
           
           # Build front-end
           export NVM_DIR=~/.nvm

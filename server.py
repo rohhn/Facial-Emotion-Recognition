@@ -31,14 +31,29 @@ def home(path):
 
 @app.route("/api/predict", methods=['POST'])
 def get_emotion_prediction():
+
+    response = {}
+
     data = request.data.decode('utf-8')
     data = json.loads(data)['data']
     img = re.sub('^data:image/.+;base64,', '', data)
     img = BytesIO(b64decode(img))
-    emotion = make_prediction(MODEL_NAME, img)
+    emotion, segmentation_bounds = make_prediction(MODEL_NAME, img)
 
-    response = make_response(emotion, 200)
-    response.mimetype = "text/plain"
+    response['emotion'] = emotion
+
+    if segmentation_bounds is not None:
+        response['segmentation_bounds'] = {
+            'x': int(segmentation_bounds[0]),
+            'y': int(segmentation_bounds[1]),
+            'w': int(segmentation_bounds[2]),
+            'h': int(segmentation_bounds[3])
+        }
+    else:
+        response['segmentation_bounds'] = None
+
+    response = make_response(response, 200)
+    response.mimetype = "application/json"
     return response
 
 
