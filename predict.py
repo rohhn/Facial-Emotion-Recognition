@@ -7,21 +7,33 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 
-from data import IMAGE_TRANSFORMER
+from data import IMAGE_TRANSFORMER_TORCH, cv2_face_segmentation
+from model_utils import torch_active_device
 
 
-def make_prediction(model_path, img):
-    model_dir = os.path.dirname(model_path)
+def make_prediction(model_name, img):
+    """
 
-    model = torch.load(model_path)
-    target_encoder = joblib.load(os.path.join(model_dir, "target_encoder.joblib"))
+    :param model_name:
+    :param img:
+    :return:
+    """
+    # model_dir = os.path.dirname(model_name)
 
+    # Load model and LabelEncoder
+    model = torch.load(os.path.join(model_name, model_name), map_location=torch_active_device)
+    target_encoder = joblib.load(os.path.join(model_name, f"{model_name}.joblib"))
+
+    model.to(torch_active_device)
     model.eval()
 
-    img_tensor = Image.open(img).convert('L')
-    img_tensor = IMAGE_TRANSFORMER(np.array(img_tensor))
+    img_tensor = Image.open(img).convert('L')  # read image
 
-    y_pred = model(**{"input": img_tensor.unsqueeze(0)})
+    img_tensor = cv2_face_segmentation(np.array(img_tensor, dtype='uint8'))  # segment face if found
+
+    img_tensor = IMAGE_TRANSFORMER_TORCH(img_tensor)
+
+    y_pred = model(**{"x": img_tensor.unsqueeze(0)})
     y_pred = target_encoder.inverse_transform(F.softmax(y_pred, dim=1).argmax(-1).cpu().numpy())[0]
 
     return y_pred

@@ -40,19 +40,19 @@ class DataLoaders:
 
     def __init__(self, batch_size=4):
         self.batch_size = batch_size
-        self.train_loader = None
-        self.val_loader = None
-        self.test_loader = None
+        self.training = None
+        self.validation = None
+        self.testing = None
 
     def __call__(self, train_dataset, val_dataset, test_dataset=None):
         if test_dataset:
-            self.test_loader = DataLoader(
+            self.testing = DataLoader(
                 test_dataset, batch_size=self.batch_size, shuffle=False
             )
-        self.train_loader = DataLoader(
+        self.training = DataLoader(
             train_dataset, batch_size=self.batch_size, shuffle=True
         )
-        self.val_loader = DataLoader(
+        self.validation = DataLoader(
             val_dataset, batch_size=self.batch_size, shuffle=False
         )
         return self
@@ -109,7 +109,7 @@ class MultiClassClassifier:
                     batch_pred = F.softmax(y_pred.detach(), dim=1).cpu().numpy().argmax(-1)
                     train_predictions[
                     batch_no * train_loader.batch_size: (batch_no + 1) * train_loader.batch_size] = batch_pred
-                    batch_correct = (batch_pred == y.numpy()).sum()
+                    batch_correct = (batch_pred == y.cpu().numpy()).sum()
                     train_correct += batch_correct
                     train_loss += loss.item() / len(train_loader)
 

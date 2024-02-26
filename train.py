@@ -3,6 +3,7 @@ python train.py --train-file "dataset/fer_2013/train.csv" --model-save-dir model
 """
 
 import argparse
+import os.path
 
 import joblib
 import numpy as np
@@ -10,7 +11,7 @@ import pandas as pd
 import torch.optim as optimizers
 from sklearn.preprocessing import LabelEncoder
 
-from data import FERDataset
+from data import FERDataset, read_fer_data
 from model_utils import MultiClassClassifier, train_val_test_split, DataLoaders, torch_active_device
 from models import SimpleCNNModel
 
@@ -21,26 +22,29 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', type=int, help='Number of training epochs.', required=True)
     parser.add_argument('--lr', type=float, help='Learning rate.', required=True)
     parser.add_argument('--model-save-dir', type=str, action='store', help='Model save directory.')
+    parser.add_argument('--augment', type=bool, action='store', help='Augment training data.')
     args = parser.parse_args()
 
-    train_data = pd.read_csv(args.train_file)
-    # test_data = pd.read_csv("dataset/fer_2013/test.csv")
+    # train_data = pd.read_csv(args.train_file)
+    # # test_data = pd.read_csv("dataset/fer_2013/test.csv")
+    #
+    # label_map = {
+    #     0: "angry",
+    #     1: "disgust",
+    #     2: "fear",
+    #     3: "happy",
+    #     4: "sad",
+    #     5: "surprise",
+    #     6: "neutral"
+    # }
+    #
+    # train_data["emotion"] = train_data["emotion"].apply(lambda x: label_map[x])
+    #
+    # # convert string bytes into image arrays
+    # train_data['pixels'] = train_data['pixels'].apply(
+    #     lambda x: np.fromstring(x, dtype='int', sep=' ').reshape(48, 48) / 255)
 
-    label_map = {
-        0: "angry",
-        1: "disgust",
-        2: "fear",
-        3: "happy",
-        4: "sad",
-        5: "surprise",
-        6: "neutral"
-    }
-
-    train_data["emotion"] = train_data["emotion"].apply(lambda x: label_map[x])
-
-    # convert string bytes into image arrays
-    train_data['pixels'] = train_data['pixels'].apply(
-        lambda x: np.fromstring(x, dtype='int', sep=' ').reshape(48, 48) / 255)
+    train_data, _ = read_fer_data(args.train_file)
 
     # Data Splits
     x_train, y_train, x_val, y_val, _, _ = train_val_test_split(train_data['pixels'], train_data['emotion'],
@@ -64,8 +68,8 @@ if __name__ == "__main__":
     print(model)
 
     train_params = {
-        "train_loader": data.train_loader,
-        "val_loader": data.val_loader,
+        "train_loader": data.training,
+        "val_loader": data.validation,
         "num_epochs": args.epochs,
         "optimizer": optimizers.Adam,
         "optimizer_params": {
@@ -77,5 +81,5 @@ if __name__ == "__main__":
     model, outputs = MultiClassClassifier.train(model, **train_params)
 
     if args.model_save_dir:
-        MultiClassClassifier.save_model(model, model.name, args.model_save_dir)
-        joblib.dump(target_encoder, f"{args.model_save_dir}/target_encoder.joblib")
+        MultiClassClassifier.save_model(model, model.__class__.__name__, args.model_save_dir)
+        joblib.dump(target_encoder, os.path.join(args.model_save_dir, f"{model.__class__.__name__}.joblib"))

@@ -15,7 +15,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ['SECRET_KEY']
 
-MODEL_PATH = 'model/SimpleCNNModel'
+MODEL_NAME = 'SimpleCNNModel'
 
 
 @app.route("/")
@@ -35,7 +35,7 @@ def get_emotion_prediction():
     data = json.loads(data)['data']
     img = re.sub('^data:image/.+;base64,', '', data)
     img = BytesIO(b64decode(img))
-    emotion = make_prediction(MODEL_PATH, img)
+    emotion = make_prediction(MODEL_NAME, img)
 
     response = make_response(emotion, 200)
     response.mimetype = "text/plain"
